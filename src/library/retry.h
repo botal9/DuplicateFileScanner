@@ -8,12 +8,12 @@
 #include <thread>
 
 struct TimeOptions {
-    int Count = 0;
-    int Hours = 0;
-    int Minutes = 0;
-    int Seconds = 0;
-    int Milliseconds = 0;
-    int Microseconds = 0;
+    int Count;
+    int Hours;
+    int Minutes;
+    int Seconds;
+    int Milliseconds;
+    int Microseconds;
 
     TimeOptions(int count, int hours, int minutes, int seconds, int milliseconds, int microseconds)
         : Count(count)

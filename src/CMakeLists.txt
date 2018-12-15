@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(DuplicateFileScanner)
+project(DuplicateFileScannerMain)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -14,16 +14,16 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Boost 1.68.0 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/library)
 
-add_subdirectory(src)
+add_subdirectory(library)
 
-add_executable(Scanner
-        src/main.cpp
-        src/mainwindow.h
-        src/mainwindow.cpp)
+add_executable(ScannerMain
+        main.cpp
+        mainwindow.h
+        mainwindow.cpp)
 
-target_link_libraries(Scanner
+target_link_libraries(ScannerMain
         ScannerLib)
 
-qt5_use_modules(Scanner Widgets)
+qt5_use_modules(ScannerMain Widgets)

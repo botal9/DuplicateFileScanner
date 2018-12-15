@@ -5,23 +5,19 @@
 #ifndef DIRDEMO_DIRECTORYSCANNER_H
 #define DIRDEMO_DIRECTORYSCANNER_H
 
+#include "util.h"
+
+#include <atomic>
 
 #include <QtCore/QObject>
 #include <QtCore/QFileInfo>
-#include <QtCore/QMap>
-#include <QtCore/QString>
-#include <QtCore/QVector>
 #include <QtCore/QDir>
-#include <stdatomic.h>
-
-using FileList = QVector<QString>;
-using FileMap = QHash<uint64_t, FileList>;
 
 class DirectoryScanner {
 public:
     DirectoryScanner() = delete;
     DirectoryScanner(const QString& directory);
-    virtual ~DirectoryScanner() = default;
+    ~DirectoryScanner() = default;
 
     FileList RecursiveScan();
     FileMap RecursiveScanReduceBySize();
@@ -34,7 +30,7 @@ private:
 
 private:
     const QDir WorkingDirectory;
-    atomic_bool NeedStop;
+    std::atomic_bool NeedStop;
 };
 
 

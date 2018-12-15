@@ -7,7 +7,12 @@
 
 #include "DirectoryScanner.h"
 #include "FileComparator.h"
+#include "util.h"
 
+#include <atomic>
+#include <thread>
+
+#include <QtCore/QDir>
 #include <QtCore/QObject>
 
 
@@ -16,12 +21,18 @@ class Worker : public QObject {
     Q_OBJECT
 
 public:
-    Worker();
+    Worker() = default;
+    Worker(const QString& directory);
+    virtual ~Worker() = default;
 
+    void Scan();
+
+    void Stop();
 
 private:
     SpscQueue Queue;
-    QString WorkingDirectory;
+    QDir WorkingDirectory;
+    std::atomic_bool NeedStop;
 };
 
 

@@ -22,6 +22,9 @@ void DirectoryScanner::RecursiveScan(QDir& tmpDir, FileList& result) {
         if (file.isSymLink()){
             continue;
         }
+        if (!file.permission(QFile::ReadUser)) {
+            continue;
+        }
         if (file.isDir()) {
             tmpDir.cd(file.fileName());
             RecursiveScan(tmpDir, result);
@@ -49,7 +52,10 @@ void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result) 
         if (file.fileName() == "." || file.fileName() == "..") {
             continue;
         }
-        if (file.isSymLink()){
+        if (file.isSymLink()) {
+            continue;
+        }
+        if (!file.permission(QFile::ReadUser)) {
             continue;
         }
         if (file.isDir()) {
