@@ -9,28 +9,32 @@
 
 #include <atomic>
 
-#include <QtCore/QObject>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
+#include <QObject>
+#include <QFileInfo>
+#include <QDir>
 
-class DirectoryScanner {
+class DirectoryScanner : public QObject {
+    Q_OBJECT
+
 public:
-    DirectoryScanner() = delete;
-    DirectoryScanner(const QString& directory);
+    DirectoryScanner() = default;
+    DirectoryScanner(const QString& directory, std::atomic_bool* needStop);
+    DirectoryScanner(const QDir& dir, std::atomic_bool* needStop);
     ~DirectoryScanner() = default;
 
-    FileList RecursiveScan();
-    FileMap RecursiveScanReduceBySize();
+    void setWorkingDirectory(const QDir& directory);
+    void setWorkingDirectory(const QString& directory);
 
-    void Stop();
+    void RecursiveScanReduceBySize(FileMap& fileMap, int& filesNumber);
 
-private:
-    void RecursiveScan(QDir& tmpDir, FileList& result);
-    void RecursiveScanReduceBySize(QDir& tmpDir, FileMap& result);
+public slots:
 
 private:
-    const QDir WorkingDirectory;
-    std::atomic_bool NeedStop;
+    void RecursiveScanReduceBySize(QDir& tmpDir, FileMap& result, int& filesNumber);
+
+private:
+    QDir WorkingDirectory;
+    std::atomic_bool* NeedStop = nullptr;
 };
 
 

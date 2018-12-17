@@ -12,10 +12,15 @@
 #include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtCore/QVector>
+#include <QMetaType>
 
 static inline constexpr std::size_t QUEUE_SIZE = 64 * 1024 - 2;
 
 using FileList = QVector<QString>;
+
+Q_DECLARE_METATYPE(FileList);
+
+static inline int id = qRegisterMetaType<FileList>();
 
 using FileMap = QHash<uint64_t, FileList>;
 

@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = DuplicateFileIndexer
+TARGET = DuplicateFileScanner
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -24,11 +24,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp
+        src/main.cpp \
+        src/mainwindow.cpp
 
 HEADERS += \
-        mainwindow.h
+        src/mainwindow.h
 
 FORMS += \
-        mainwindow.ui
+        src/mainwindow.ui
+
+CONFIG (debug, debug|release) {
+    CONFIG += \
+        console
+}

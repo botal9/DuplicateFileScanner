@@ -9,15 +9,23 @@
 
 #include <atomic>
 
-#include <QtCore/QRunnable>
+#include <QObject>
 
-class Producer : public QRunnable {
+class FileComparator : public QObject {
+    Q_OBJECT
+
 public:
-    Producer() = delete;
-    Producer(const FileMap& fileMap, SpscQueue& queue, std::atomic_bool& needStop);
-    ~Producer() override;
+    FileComparator() = default;
+    FileComparator(const FileMap& fileMap, std::atomic_bool* needStop);
+    ~FileComparator() = default;
 
-    void run() override;
+public slots:
+    void Process();
+
+signals:
+    void SendDuplicates(const FileList& files);
+    void ProcessedFiles(int filesNumber);
+    void Finished();
 
 private:
     void ProcessFileList(const FileList& fileList);
@@ -30,8 +38,7 @@ private:
 
 private:
     FileMap Hash2FileList;
-    SpscQueue& Queue;
-    std::atomic_bool& NeedStop;
+    std::atomic_bool* NeedStop = nullptr;
 };
 
 

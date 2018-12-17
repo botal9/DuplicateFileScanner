@@ -34,6 +34,9 @@ bool DoWithRetry(TimeOptions options, const Function& function, Args&&... args) 
             ok = true;
             break;
         } catch (...) {
+            if (i + 1 == options.Count) {
+                return false;
+            }
             auto sleepDuration = std::chrono::hours(options.Hours) +
                     std::chrono::minutes(options.Minutes) +
                     std::chrono::seconds(options.Seconds) +

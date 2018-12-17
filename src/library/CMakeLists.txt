@@ -9,19 +9,15 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 add_library(ScannerLib STATIC
-        Consumer.cpp
-        Consumer.h
         DirectoryScanner.cpp
         DirectoryScanner.h
         FileComparator.cpp
         FileComparator.h
-        Producer.cpp
-        Producer.h
-        Scanner.cpp
-        Scanner.h
+        FileComparator.cpp
+        FileComparator.h
 
         retry.cpp
         retry.h
-        util.h)
+        util.h Worker.cpp Worker.h)
 
 qt5_use_modules(ScannerLib Widgets)

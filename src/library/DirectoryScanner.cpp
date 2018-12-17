@@ -4,49 +4,22 @@
 
 #include "DirectoryScanner.h"
 
-DirectoryScanner::DirectoryScanner(const QString& directory)
+DirectoryScanner::DirectoryScanner(const QString& directory, std::atomic_bool* needStop)
     : WorkingDirectory(directory)
-    , NeedStop(false)
+    , NeedStop(needStop)
 {
 }
 
-void DirectoryScanner::RecursiveScan(QDir& tmpDir, FileList& result) {
-    QFileInfoList list = tmpDir.entryInfoList();
-    for (const QFileInfo& file : list) {
-        if (NeedStop) {
-            break;
-        }
-        if (file.fileName() == "." || file.fileName() == "..") {
-            continue;
-        }
-        if (file.isSymLink()){
-            continue;
-        }
-        if (!file.permission(QFile::ReadUser)) {
-            continue;
-        }
-        if (file.isDir()) {
-            tmpDir.cd(file.fileName());
-            RecursiveScan(tmpDir, result);
-            tmpDir.cdUp();
-        }
-        if (file.isFile()) {
-            result.push_back(file.absoluteFilePath());
-        }
-    }
+DirectoryScanner::DirectoryScanner(const QDir &dir, std::atomic_bool* needStop)
+    : WorkingDirectory(dir)
+    , NeedStop(needStop)
+{
 }
 
-FileList DirectoryScanner::RecursiveScan() {
-    FileList result;
-    QDir tmpDir = WorkingDirectory;
-    RecursiveScan(tmpDir, result);
-    return result;
-}
-
-void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result) {
+void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result, int& filesNumber) {
     QFileInfoList list = tmpDir.entryInfoList();
     for (const QFileInfo& file : list) {
-        if (NeedStop) {
+        if (NeedStop->load()) {
             break;
         }
         if (file.fileName() == "." || file.fileName() == "..") {
@@ -60,22 +33,27 @@ void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result) 
         }
         if (file.isDir()) {
             tmpDir.cd(file.fileName());
-            RecursiveScanReduceBySize(tmpDir, result);
+            RecursiveScanReduceBySize(tmpDir, result, filesNumber);
             tmpDir.cdUp();
         }
         if (file.isFile()) {
+            ++filesNumber;
             result[file.size()].push_back(file.absoluteFilePath());
         }
     }
 }
 
-FileMap DirectoryScanner::RecursiveScanReduceBySize() {
-    FileMap result;
-    QDir tmpDir = WorkingDirectory;
-    RecursiveScanReduceBySize(tmpDir, result);
-    return result;
+void DirectoryScanner::RecursiveScanReduceBySize(FileMap& fileMap, int& filesNumber) {
+    if (!WorkingDirectory.isEmpty()) {
+        QDir tmpDir = WorkingDirectory;
+        RecursiveScanReduceBySize(tmpDir, fileMap, filesNumber);
+    }
 }
 
-void DirectoryScanner::Stop() {
-    NeedStop = true;
+void DirectoryScanner::setWorkingDirectory(const QDir& dir) {
+    WorkingDirectory = dir;
+}
+
+void DirectoryScanner::setWorkingDirectory(const QString& directory) {
+    WorkingDirectory = directory;
 }
