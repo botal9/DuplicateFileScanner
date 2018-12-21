@@ -19,11 +19,10 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 add_subdirectory(src)
 
 add_executable(Scanner
-        src/main.cpp
-        src/mainwindow.h
-        src/mainwindow.cpp)
+        src/main.cpp)
 
 target_link_libraries(Scanner
-        ScannerLib)
+        ScannerLib
+        ScannerUI)
 
 qt5_use_modules(Scanner Widgets)

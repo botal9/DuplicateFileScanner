@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "src/library/Worker.h"
+#include "library/Worker.h"
+#include "library/util.h"
+#include "TreeWidgetItem.h"
 
 #include <memory>
 
@@ -27,22 +29,26 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
-
 private:
     void ShowAbout();
     void SelectDirectory();
     void Stop();
+    void PostProcessInterface(bool success);
+    void SetupInterface();
+    void ExpandAllRows();
+    void CollapseAllRows();
 
 public slots:
     void AddDuplicatesList(const FileList &duplicates);
-    void UpdateProgressBar(int filesNumber);
-    void SetupProgressBar(int filesNumber);
-
-signals:
+    void UpdateProgressBar(uint64_t filesNumber);
+    void SetupProgressBar(uint64_t filesNumber);
+    void PostProcessFinish();
+    void PostProcessAbort();
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;
     std::atomic_bool NeedStop = false;
+    QVector<QThread*> WorkingThreads;
 };
 
 

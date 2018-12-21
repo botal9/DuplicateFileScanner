@@ -24,24 +24,46 @@ MainWindow::MainWindow(QWidget* parent)
     ui->treeWidget->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     ui->treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
+    ui->statusAction->setText("Choose directory");
+    ui->statusScanned->hide();
     ui->progressBar->reset();
     ui->progressBar->hide();
-    ui->treeWidget->hide();
     ui->actionStopScanning->setVisible(false);
     ui->actionDelete->setVisible(false);
 
     connect(ui->actionScanDirectory, &QAction::triggered, this, &MainWindow::SelectDirectory);
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
+    connect(ui->actionCollapseAll, &QAction::triggered, this, &MainWindow::CollapseAllRows);
+    connect(ui->actionExpandAll, &QAction::triggered, this, &MainWindow::ExpandAllRows);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::ShowAbout);
     connect(ui->actionStopScanning, &QAction::triggered, this, &MainWindow::Stop);
     //connect(ui->actionDelete, SIGNAL(released()), SLOT(delete_items()));
 }
 
 MainWindow::~MainWindow() {
+    NeedStop.store(true);
+    for (QThread* thread : WorkingThreads) {
+        if (thread != nullptr && !thread->isFinished()) {
+            thread->quit();
+        }
+    }
+    for (QThread* thread : WorkingThreads) {
+        if (thread != nullptr && !thread->isFinished()) {
+            thread->wait();
+        }
+    }
 }
 
 void MainWindow::Stop() {
     NeedStop.store(true);
+}
+
+void MainWindow::CollapseAllRows() {
+    ui->treeWidget->collapseAll();
+}
+
+void MainWindow::ExpandAllRows() {
+    ui->treeWidget->expandAll();
 }
 
 void MainWindow::ShowAbout() {
@@ -60,11 +82,9 @@ void MainWindow::SelectDirectory() {
         return;
     }
 
-    //ui->actionScanDirectory->setVisible(false);
-    ui->actionStopScanning->setVisible(true);
-    ui->actionDelete->setVisible(true);
-    ui->treeWidget->setVisible(true);
+    SetupInterface();
 
+    NeedStop = false;
     QThread* thread = new QThread;
     Worker* worker = new Worker(directory, this, &NeedStop);
     worker->moveToThread(thread);
@@ -73,33 +93,66 @@ void MainWindow::SelectDirectory() {
     connect(worker, SIGNAL(Finished()), thread, SLOT(quit()));
     connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT (deleteLater()));
-    connect(worker, SIGNAL(SetupFilesNumber(int)), this, SLOT(SetupProgressBar(int)));
+    connect(worker, SIGNAL(SetupFilesNumber(uint64_t)), this, SLOT(SetupProgressBar(uint64_t )));
+    connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));
+    connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
 
+    WorkingThreads.push_back(thread);
     thread->start();
 }
 
 void MainWindow::AddDuplicatesList(const FileList &duplicates) {
     UpdateProgressBar(duplicates.size());
 
-    QTreeWidgetItem* item = new QTreeWidgetItem();
-    item->setText(0, QString("Found " + QString::number(duplicates.size())) + " duplicates");
+    QTreeWidgetItem* item = new TreeWidgetItem();
+    item->setText(0, QString("Found ").append(QString::number(duplicates.size())).append(" duplicates"));
     QFileInfo fileInfo(duplicates[0]);
     item->setText(1, QString::number(fileInfo.size()));
 
     for (const QString& file : duplicates) {
-        QTreeWidgetItem* child_item = new QTreeWidgetItem();
-        child_item->setText(0, file);
-        item->addChild(child_item);
+        QTreeWidgetItem* childItem = new TreeWidgetItem();
+        childItem->setText(0, file);
+        item->addChild(childItem);
     }
     ui->treeWidget->addTopLevelItem(item);
 }
 
-void MainWindow::SetupProgressBar(int filesNumber) {
+void MainWindow::SetupProgressBar(uint64_t filesNumber) {
     ui->progressBar->show();
     ui->progressBar->setRange(0, filesNumber);
 }
 
-void MainWindow::UpdateProgressBar(int filesNumber) {
+void MainWindow::UpdateProgressBar(uint64_t filesNumber) {
     ui->progressBar->setValue(ui->progressBar->value() + filesNumber);
+}
+
+void MainWindow::PostProcessInterface(bool success) {
+    ui->progressBar->hide();
+    ui->statusScanned->setText(QString("Files scanned: ").append(QString::number(ui->progressBar->value())));
+    ui->statusScanned->show();
+    if (success) {
+        ui->statusAction->setText("Finished");
+    } else {
+        ui->statusAction->setText("Aborted");
+    }
+    ui->statusAction->show();
+    ui->treeWidget->setSortingEnabled(true);
+}
+
+void MainWindow::PostProcessFinish() {
+    PostProcessInterface(/*success*/true);
+}
+
+void MainWindow::PostProcessAbort() {
+    PostProcessInterface(/*success*/false);
+}
+
+void MainWindow::SetupInterface() {
+    ui->statusAction->hide();
+    ui->statusScanned->hide();
+    ui->actionStopScanning->setVisible(true);
+    ui->actionDelete->setVisible(true);
+    ui->treeWidget->setVisible(true);
+    ui->treeWidget->clear();
 }
 

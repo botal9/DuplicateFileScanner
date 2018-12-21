@@ -14,16 +14,18 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Boost 1.68.0 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/interface)
 include_directories(${CMAKE_SOURCE_DIR}/library)
 
 add_subdirectory(library)
+add_subdirectory(interface)
 
 add_executable(ScannerMain
-        main.cpp
-        mainwindow.h
-        mainwindow.cpp)
+        main.cpp)
+
 
 target_link_libraries(ScannerMain
-        ScannerLib)
+        ScannerLib
+        ScannerUI)
 
 qt5_use_modules(ScannerMain Widgets)

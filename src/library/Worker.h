@@ -26,11 +26,13 @@ public:
 
 public slots:
     void Process();
+    void Finish();
     void Stop();
 
 signals:
-    void SetupFilesNumber(int filesNumber);
+    void SetupFilesNumber(uint64_t filesNumber);
     void Finished();
+    void Aborted();
 
 private:
     QDir WorkingDirectory;

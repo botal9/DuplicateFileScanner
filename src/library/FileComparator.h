@@ -16,15 +16,18 @@ class FileComparator : public QObject {
 
 public:
     FileComparator() = default;
+    FileComparator(std::atomic_bool* needStop);
     FileComparator(const FileMap& fileMap, std::atomic_bool* needStop);
     ~FileComparator() = default;
+
+    void setFileMap(const FileMap& fileMap);
 
 public slots:
     void Process();
 
 signals:
     void SendDuplicates(const FileList& files);
-    void ProcessedFiles(int filesNumber);
+    void ProcessedFiles(uint64_t filesNumber);
     void Finished();
 
 private:
@@ -32,9 +35,9 @@ private:
 
     bool Compare(const QString& lhs, const QString& rhs);
 
-    std::size_t Hash(const QString& file);
+    uint64_t Hash(const QString& file);
 
-    std::size_t FastHash(const QString& file);
+    uint64_t FastHash(const QString& file);
 
 private:
     FileMap Hash2FileList;

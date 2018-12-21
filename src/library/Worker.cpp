@@ -27,10 +27,11 @@ Worker::~Worker() {
 }
 
 void Worker::Process() {
+    qDebug() << "Start scanning directory";
 
     Scanner = new DirectoryScanner(WorkingDirectory, NeedStop);
 
-    int filesNumber = 0;
+    uint64_t filesNumber = 0;
     FileMap fileMap;
     Scanner->RecursiveScanReduceBySize(fileMap, filesNumber);
 
@@ -39,12 +40,21 @@ void Worker::Process() {
     Comparator = new FileComparator(fileMap, NeedStop);
 
     connect(Comparator, SIGNAL(SendDuplicates(const FileList&)), Parent, SLOT(AddDuplicatesList(const FileList&)));
-    connect(Comparator, SIGNAL(ProcessedFiles(int)), Parent, SLOT(UpdateProgressBar(int)));
+    connect(Comparator, SIGNAL(ProcessedFiles(uint64_t)), Parent, SLOT(UpdateProgressBar(uint64_t)));
+    connect(Comparator, SIGNAL(Finished()), this, SLOT(Finish()));
 
     Comparator->Process();
 }
 
 void Worker::Stop() {
-    qDebug() << "Scanning has stopped";
+    qDebug() << "Stop scanning";
     NeedStop->store(true);
+}
+
+void Worker::Finish() {
+    if (NeedStop->load()) {
+        emit Aborted();
+    } else {
+        emit Finished();
+    }
 }

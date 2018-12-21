@@ -25,12 +25,10 @@ public:
     void setWorkingDirectory(const QDir& directory);
     void setWorkingDirectory(const QString& directory);
 
-    void RecursiveScanReduceBySize(FileMap& fileMap, int& filesNumber);
-
-public slots:
+    void RecursiveScanReduceBySize(FileMap& fileMap, uint64_t& filesNumber);
 
 private:
-    void RecursiveScanReduceBySize(QDir& tmpDir, FileMap& result, int& filesNumber);
+    void RecursiveScanReduceBySize(QDir& tmpDir, FileMap& result, uint64_t& filesNumber);
 
 private:
     QDir WorkingDirectory;

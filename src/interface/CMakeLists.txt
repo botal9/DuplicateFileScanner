@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(ScannerLib)
+project(ScannerUI)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
@@ -8,18 +8,14 @@ set(CMAKE_CXX_FLAGS: "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -pedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -D_GLIBCXX_DEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-add_library(ScannerLib STATIC
-        DirectoryScanner.cpp
-        DirectoryScanner.h
-        FileComparator.cpp
-        FileComparator.h
-        FileComparator.cpp
-        FileComparator.h
+include_directories(${CMAKE_SOURCE_DIR}/../library)
 
-        retry.cpp
-        retry.h
-        util.h
-        Worker.cpp
-        Worker.h)
+link_libraries(ScannerLib)
 
-qt5_use_modules(ScannerLib Widgets)
+add_library(ScannerUI STATIC
+        mainwindow.h
+        mainwindow.cpp
+        TreeWidgetItem.h
+        TreeWidgetItem.cpp)
+
+qt5_use_modules(ScannerUI Widgets)

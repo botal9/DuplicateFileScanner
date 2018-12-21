@@ -11,7 +11,7 @@
 
 #include <QtCore/QDebug>
 
-static const TimeOptions DefaultTimeOptions(/*Count*/1, 0, 0, 0, /*Milliseconds*/20, 0);
+static const TimeOptions DefaultTimeOptions(/*Count*/3, 0, 0, 0, /*Milliseconds*/30, 0);
 
 static constexpr std::size_t BUFFER_SIZE = 128 * 1024;
 static constexpr std::size_t SMALL_BUFFER_SIZE = 1024;
@@ -23,10 +23,19 @@ inline static void TryOpen(const QString& file, std::ifstream& in) {
     }
 }
 
-FileComparator::FileComparator(const FileMap &fileMap, std::atomic_bool* needStop)
+FileComparator::FileComparator(std::atomic_bool* needStop)
+    : NeedStop(needStop)
+{
+}
+
+FileComparator::FileComparator(const FileMap& fileMap, std::atomic_bool* needStop)
     : Hash2FileList(fileMap)
     , NeedStop(needStop)
 {
+}
+
+void FileComparator::setFileMap(const FileMap& fileMap) {
+    Hash2FileList = fileMap;
 }
 
 void FileComparator::Process() {
@@ -46,30 +55,31 @@ void FileComparator::Process() {
 }
 
 bool FileComparator::Compare(const QString &lhs, const QString &rhs) {
-    std::ifstream inl;
-    std::ifstream inr;
+    std::ifstream inLeft;
+    std::ifstream inRight;
 
-    bool okl = DoWithRetry(DefaultTimeOptions, TryOpen, lhs, inl);
-    bool okr = DoWithRetry(DefaultTimeOptions, TryOpen, rhs, inr);
+    bool openedLeft = DoWithRetry(DefaultTimeOptions, TryOpen, lhs, inLeft);
+    bool openedRight = DoWithRetry(DefaultTimeOptions, TryOpen, rhs, inRight);
 
-    if (!okl || !okr) {
-        std::string err = "Can't open file while comparing, file: " + (!okl ? lhs.toStdString() : rhs.toStdString());
+    if (!openedLeft || !openedRight) {
+        std::string err = "Can't open " + std::string(openedLeft ? "first" : "second") +
+                " file while comparing files: " + lhs.toStdString() + rhs.toStdString();
         throw std::logic_error(err);
     }
 
-    char bufl[BUFFER_SIZE];
-    char bufr[BUFFER_SIZE];
+    char leftBuffer[BUFFER_SIZE];
+    char rightBuffer[BUFFER_SIZE];
     bool equal = true;
-    while (!inl.eof() && equal && !NeedStop->load()) {
-        inl.read(bufl, BUFFER_SIZE);
-        inr.read(bufr, BUFFER_SIZE);
-        auto len = inl.gcount();
-        if (memcmp(bufl, bufr, static_cast<std::size_t>(len)) != 0) {
+    while (!inLeft.eof() && equal && !NeedStop->load()) {
+        inLeft.read(leftBuffer, BUFFER_SIZE);
+        inRight.read(rightBuffer, BUFFER_SIZE);
+        auto len = inLeft.gcount();
+        if (memcmp(leftBuffer, rightBuffer, static_cast<std::size_t>(len)) != 0) {
             equal = false;
         }
     }
-    inl.close();
-    inr.close();
+    inLeft.close();
+    inRight.close();
 
     if (NeedStop->load()) {
         return false;
@@ -77,13 +87,9 @@ bool FileComparator::Compare(const QString &lhs, const QString &rhs) {
     return equal;
 }
 
-std::size_t FileComparator::Hash(const QString& file) {
+uint64_t FileComparator::Hash(const QString& file) {
     std::ifstream in;
-
-    bool ok = DoWithRetry(DefaultTimeOptions, TryOpen, file, in);
-    if (!ok) {
-        throw std::logic_error("Can't calculate file hash, file: " + file.toStdString());
-    }
+    DoWithRetryThrows(DefaultTimeOptions, TryOpen, file, in);
 
     std::size_t result = 0;
     char buf[BUFFER_SIZE];
@@ -97,13 +103,9 @@ std::size_t FileComparator::Hash(const QString& file) {
     return result;
 }
 
-std::size_t FileComparator::FastHash(const QString &file) {
+uint64_t FileComparator::FastHash(const QString& file) {
     std::ifstream in;
-
-    bool ok = DoWithRetry(DefaultTimeOptions, TryOpen, file, in);
-    if (!ok) {
-        throw std::logic_error("Can't calculate file hash, file: " + file.toStdString());
-    }
+    DoWithRetryThrows(DefaultTimeOptions, TryOpen, file, in);
 
     char buf[SMALL_BUFFER_SIZE];
 
@@ -114,7 +116,7 @@ std::size_t FileComparator::FastHash(const QString &file) {
     return boost::hash_value(std::string(buf, buf + len));
 }
 
-void FileComparator::ProcessFileList(const FileList &fileList) {
+void FileComparator::ProcessFileList(const FileList& fileList) {
     QMultiHash<std::size_t, QVector<QString>> hash2file;
 
     for (const QString& file : fileList) {
@@ -122,7 +124,7 @@ void FileComparator::ProcessFileList(const FileList &fileList) {
             break;
         }
 
-        std::size_t hash;
+        uint64_t hash;
 
         try {
             hash = FastHash(file);
@@ -149,6 +151,7 @@ void FileComparator::ProcessFileList(const FileList &fileList) {
                     }
                     break;
                 } catch (std::exception& e) {
+                    qDebug() << e.what();
                     continue;
                 }
             }
@@ -159,7 +162,7 @@ void FileComparator::ProcessFileList(const FileList &fileList) {
         }
     }
 
-    int skippedFiles = 0;
+    uint64_t skippedFiles = 0;
     for (auto& sameFiles : hash2file) {
         if (sameFiles.size() != 1) {
             emit SendDuplicates(sameFiles);

@@ -16,7 +16,7 @@ DirectoryScanner::DirectoryScanner(const QDir &dir, std::atomic_bool* needStop)
 {
 }
 
-void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result, int& filesNumber) {
+void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result, uint64_t& filesNumber) {
     QFileInfoList list = tmpDir.entryInfoList();
     for (const QFileInfo& file : list) {
         if (NeedStop->load()) {
@@ -43,7 +43,7 @@ void DirectoryScanner::RecursiveScanReduceBySize(QDir &tmpDir, FileMap &result, 
     }
 }
 
-void DirectoryScanner::RecursiveScanReduceBySize(FileMap& fileMap, int& filesNumber) {
+void DirectoryScanner::RecursiveScanReduceBySize(FileMap& fileMap, uint64_t& filesNumber) {
     if (!WorkingDirectory.isEmpty()) {
         QDir tmpDir = WorkingDirectory;
         RecursiveScanReduceBySize(tmpDir, fileMap, filesNumber);
