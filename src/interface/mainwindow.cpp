@@ -38,6 +38,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::ShowAbout);
     connect(ui->actionStopScanning, &QAction::triggered, this, &MainWindow::Stop);
     connect(ui->actionDelete, &QAction::triggered, this, &MainWindow::Delete);
+
+    Time.start();
 }
 
 MainWindow::~MainWindow() {
@@ -77,6 +79,7 @@ void MainWindow::SelectDirectory() {
             QString(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
+    Time.restart();
     QFileInfo directoryIifo(directory);
     if (!directoryIifo.exists()) {
         return;
@@ -137,6 +140,7 @@ void MainWindow::PostProcessInterface(bool success) {
     }
     ui->statusAction->show();
     ui->treeWidget->setSortingEnabled(true);
+    qDebug("Time elapsed: %d ms", Time.elapsed());
 }
 
 void MainWindow::PostProcessFinish() {

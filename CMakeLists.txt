@@ -19,7 +19,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/interface)
 include_directories(${CMAKE_SOURCE_DIR}/src/library)
 
-add_subdirectory(src)
 add_subdirectory(src/library)
 add_subdirectory(src/interface)
 

@@ -14,6 +14,7 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QThread>
+#include <QTime>
 
 #include <QtWidgets/QStyle>
 #include <QtWidgets/QAction>
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<Ui::MainWindow> ui;
     std::atomic_bool NeedStop = false;
     QVector<QThread*> WorkingThreads;
+    QTime Time;
 };
 
 
