@@ -52,6 +52,10 @@ private:
     std::atomic_bool NeedStop = false;
     QVector<QThread*> WorkingThreads;
     QTime Time;
+
+    QDir SelectedDirectory;
+    QFileInfo SelectedDirectoryInfo;
+    QString BeautySelectedDirectory;
 };
 
 

@@ -26,6 +26,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->statusAction->setText("Choose directory");
     ui->statusScanned->hide();
+    ui->selectedDirectory->hide();
+
     ui->progressBar->reset();
     ui->progressBar->hide();
     ui->actionStopScanning->setVisible(false);
@@ -73,15 +75,16 @@ void MainWindow::ShowAbout() {
 }
 
 void MainWindow::SelectDirectory() {
-    QString directory = QFileDialog::getExistingDirectory(
+    SelectedDirectory = QFileDialog::getExistingDirectory(
             this,
             "Select Directory for Scanning",
             QString(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    SelectedDirectoryInfo = QFileInfo(SelectedDirectory.absolutePath());
+    BeautySelectedDirectory = QDir::toNativeSeparators(SelectedDirectoryInfo.absoluteFilePath()).append(QDir::separator());
 
     Time.restart();
-    QFileInfo directoryIifo(directory);
-    if (!directoryIifo.exists()) {
+    if (!SelectedDirectoryInfo.exists()) {
         return;
     }
 
@@ -89,7 +92,7 @@ void MainWindow::SelectDirectory() {
 
     NeedStop = false;
     QThread* thread = new QThread;
-    Worker* worker = new Worker(directory, this, &NeedStop);
+    Worker* worker = new Worker(SelectedDirectory.absolutePath(), this, &NeedStop);
     worker->moveToThread(thread);
 
     connect(thread, SIGNAL(started()), worker, SLOT(Process()));
@@ -106,15 +109,21 @@ void MainWindow::SelectDirectory() {
 
 void MainWindow::AddDuplicatesList(const FileList &duplicates) {
     UpdateProgressBar(duplicates.size());
+    QRegExp regExp(BeautySelectedDirectory);
 
     QTreeWidgetItem* item = new TreeWidgetItem();
     item->setText(0, QString(DUPLICATES_PREFIX).append(QString::number(duplicates.size())).append(DUPLICATES_SUFFIX));
     QFileInfo fileInfo(duplicates[0]);
     item->setText(1, QString::number(fileInfo.size()));
 
-    for (const QString& file : duplicates) {
+    for (const QString& fileName : duplicates) {
         QTreeWidgetItem* childItem = new TreeWidgetItem();
-        childItem->setText(0, file);
+
+        QFileInfo fileInfo(fileName);
+        QString beautyName = QDir::toNativeSeparators(fileInfo.absoluteFilePath());
+        beautyName.remove(regExp);
+
+        childItem->setText(0, beautyName);
         item->addChild(childItem);
     }
     ui->treeWidget->addTopLevelItem(item);
@@ -154,6 +163,8 @@ void MainWindow::PostProcessAbort() {
 void MainWindow::SetupInterface() {
     ui->statusAction->hide();
     ui->statusScanned->hide();
+    ui->selectedDirectory->setText("Selected directory: " + BeautySelectedDirectory);
+    ui->selectedDirectory->show();
     ui->actionStopScanning->setVisible(true);
     ui->actionDelete->setVisible(true);
     ui->treeWidget->setVisible(true);
