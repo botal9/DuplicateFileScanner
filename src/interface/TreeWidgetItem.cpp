@@ -4,7 +4,15 @@
 
 #include "TreeWidgetItem.h"
 
+#include <QDebug>
 #include <QRegExp>
+
+static const QRegExp RegExp("(\\d+)");
+
+TreeWidgetItem::TreeWidgetItem()
+        : QTreeWidgetItem()
+{
+}
 
 bool TreeWidgetItem::operator<(const QTreeWidgetItem& other) const {
     int lhs = 0;
@@ -22,7 +30,15 @@ bool TreeWidgetItem::operator<(const QTreeWidgetItem& other) const {
     return lhs < rhs;
 }
 
-TreeWidgetItem::TreeWidgetItem()
-    : QTreeWidgetItem()
-{
+void TreeWidgetItem::SetNumber(int column, int number) {
+    switch (column) {
+        case 0:
+            setText(column, text(column).replace(RegExp, QString::number(number)));
+            break;
+        case 1:
+            setText(column, QString::number(number));
+            break;
+        default:
+            throw std::logic_error("Wrong column index");
+    }
 }

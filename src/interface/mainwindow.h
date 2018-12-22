@@ -37,6 +37,7 @@ private:
     void SetupInterface();
     void ExpandAllRows();
     void CollapseAllRows();
+    void Delete();
 
 public slots:
     void AddDuplicatesList(const FileList &duplicates);

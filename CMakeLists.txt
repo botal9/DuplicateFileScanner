@@ -14,9 +14,14 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Boost 1.68.0 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/src/interface)
+include_directories(${CMAKE_SOURCE_DIR}/src/library)
 
 add_subdirectory(src)
+add_subdirectory(src/library)
+add_subdirectory(src/interface)
 
 add_executable(Scanner
         src/main.cpp)

@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->actionExpandAll, &QAction::triggered, this, &MainWindow::ExpandAllRows);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::ShowAbout);
     connect(ui->actionStopScanning, &QAction::triggered, this, &MainWindow::Stop);
-    //connect(ui->actionDelete, SIGNAL(released()), SLOT(delete_items()));
+    connect(ui->actionDelete, &QAction::triggered, this, &MainWindow::Delete);
 }
 
 MainWindow::~MainWindow() {
@@ -105,7 +105,7 @@ void MainWindow::AddDuplicatesList(const FileList &duplicates) {
     UpdateProgressBar(duplicates.size());
 
     QTreeWidgetItem* item = new TreeWidgetItem();
-    item->setText(0, QString("Found ").append(QString::number(duplicates.size())).append(" duplicates"));
+    item->setText(0, QString(DUPLICATES_PREFIX).append(QString::number(duplicates.size())).append(DUPLICATES_SUFFIX));
     QFileInfo fileInfo(duplicates[0]);
     item->setText(1, QString::number(fileInfo.size()));
 
@@ -154,5 +154,52 @@ void MainWindow::SetupInterface() {
     ui->actionDelete->setVisible(true);
     ui->treeWidget->setVisible(true);
     ui->treeWidget->clear();
+}
+
+void MainWindow::Delete() {
+    auto selectedItems = ui->treeWidget->selectedItems();
+    QVector<QTreeWidgetItem*> itemsToDelete;
+
+    for (const auto& item : selectedItems) {
+        if (item->childCount() == 0) {
+            itemsToDelete.push_back(item);
+        }
+    }
+
+    QString confirmationQuestion = "Do you want to delete selected file(s)?";
+    auto answer = QMessageBox::question(this, "Delete file(s)", confirmationQuestion);
+    if (answer == QMessageBox::No) {
+        return;
+    }
+
+    QMap<QString, QTreeWidgetItem*> deletedFiles;
+    QVector<QString> skippedFiles;
+    for (const auto& item : itemsToDelete) {
+        QFile file(item->text(0));
+        if (file.remove()) {
+            deletedFiles.insert(file.fileName(), item);
+        } else {
+            skippedFiles.push_back(file.fileName());
+        }
+    }
+
+    for (const auto& item : deletedFiles) {
+        auto* parent = item->parent();
+        parent->removeChild(item);
+        dynamic_cast<TreeWidgetItem*>(parent)->SetNumber(0, parent->childCount());
+        if (parent->childCount() == 0) {
+            delete parent;
+        }
+    }
+
+    QString operationInfo = QString("Can't delete ").append(QString::number(skippedFiles.size())).append(" file(s):\n");
+    for (const QString& fileName : skippedFiles) {
+        operationInfo.append(fileName).append("\n");
+    }
+
+    ui->treeWidget->clearSelection();
+    if (!skippedFiles.empty()) {
+        QMessageBox::information(this, "Can't delete file(s)", operationInfo);
+    }
 }
 
