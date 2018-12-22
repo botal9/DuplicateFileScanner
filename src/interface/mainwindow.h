@@ -54,7 +54,6 @@ private:
     QTime Time;
 
     QDir SelectedDirectory;
-    QFileInfo SelectedDirectoryInfo;
     QString BeautySelectedDirectory;
 };
 

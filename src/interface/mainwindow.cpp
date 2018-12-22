@@ -80,11 +80,11 @@ void MainWindow::SelectDirectory() {
             "Select Directory for Scanning",
             QString(),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    SelectedDirectoryInfo = QFileInfo(SelectedDirectory.absolutePath());
-    BeautySelectedDirectory = QDir::toNativeSeparators(SelectedDirectoryInfo.absoluteFilePath()).append(QDir::separator());
+    QFileInfo selectedDirectoryInfo = QFileInfo(SelectedDirectory.absolutePath());
+    BeautySelectedDirectory = QDir::toNativeSeparators(selectedDirectoryInfo.absoluteFilePath()).append(QDir::separator());
 
     Time.restart();
-    if (!SelectedDirectoryInfo.exists()) {
+    if (!selectedDirectoryInfo.exists()) {
         return;
     }
 
@@ -179,6 +179,9 @@ void MainWindow::Delete() {
         if (item->childCount() == 0) {
             itemsToDelete.push_back(item);
         }
+    }
+    if (itemsToDelete.empty()) {
+        return;
     }
 
     QString confirmationQuestion = "Do you want to delete selected file(s)?";
