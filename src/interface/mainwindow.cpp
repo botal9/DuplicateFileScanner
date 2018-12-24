@@ -99,7 +99,7 @@ void MainWindow::SelectDirectory() {
     connect(worker, SIGNAL(Finished()), thread, SLOT(quit()));
     connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT (deleteLater()));
-    connect(worker, SIGNAL(SetupFilesNumber(uint64_t)), this, SLOT(SetupProgressBar(uint64_t )));
+    connect(worker, SIGNAL(SetupFilesNumber(int)), this, SLOT(SetupProgressBar(int)));
     connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));
     connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
 
@@ -116,10 +116,10 @@ void MainWindow::AddDuplicatesList(const FileList &duplicates) {
     QFileInfo fileInfo(duplicates[0]);
     item->setText(1, QString::number(fileInfo.size()));
 
-    for (const QString& fileName : duplicates) {
+    for (const QFile& file : duplicates) {
         QTreeWidgetItem* childItem = new TreeWidgetItem();
 
-        QFileInfo fileInfo(fileName);
+        QFileInfo fileInfo(file);
         QString beautyName = QDir::toNativeSeparators(fileInfo.absoluteFilePath());
         beautyName.remove(regExp);
 
@@ -129,12 +129,12 @@ void MainWindow::AddDuplicatesList(const FileList &duplicates) {
     ui->treeWidget->addTopLevelItem(item);
 }
 
-void MainWindow::SetupProgressBar(uint64_t filesNumber) {
+void MainWindow::SetupProgressBar(int filesNumber) {
     ui->progressBar->show();
     ui->progressBar->setRange(0, filesNumber);
 }
 
-void MainWindow::UpdateProgressBar(uint64_t filesNumber) {
+void MainWindow::UpdateProgressBar(int filesNumber) {
     ui->progressBar->setValue(ui->progressBar->value() + filesNumber);
 }
 

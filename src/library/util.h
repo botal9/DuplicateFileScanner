@@ -5,15 +5,13 @@
 #ifndef DIRECTORYSCANNER_QUEUE_H
 #define DIRECTORYSCANNER_QUEUE_H
 
-#include <boost/lockfree/policies.hpp>
-#include <boost/lockfree/spsc_queue.hpp>
-
 #include <QHash>
 #include <QMap>
 #include <QString>
 #include <QVector>
 #include <QMetaType>
 #include <QMetaClassInfo>
+#include <QFile>
 
 using FileList = QVector<QString>;
 

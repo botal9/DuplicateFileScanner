@@ -42,8 +42,8 @@ private:
 
 public slots:
     void AddDuplicatesList(const FileList &duplicates);
-    void UpdateProgressBar(uint64_t filesNumber);
-    void SetupProgressBar(uint64_t filesNumber);
+    void UpdateProgressBar(int filesNumber);
+    void SetupProgressBar(int filesNumber);
     void PostProcessFinish();
     void PostProcessAbort();
 

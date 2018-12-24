@@ -9,6 +9,7 @@
 
 #include <atomic>
 
+#include <QByteArray>
 #include <QObject>
 
 class FileComparator : public QObject {
@@ -27,20 +28,20 @@ public slots:
 
 signals:
     void SendDuplicates(const FileList& files);
-    void ProcessedFiles(uint64_t filesNumber);
+    void ProcessedFiles(int filesNumber);
     void Finished();
 
 private:
     void ProcessFileList(const FileList& fileList);
 
-    bool Compare(const QString& lhs, const QString& rhs);
+    bool Compare(QFile& lhs, QFile& rhs);
 
-    uint64_t Hash(const QString& file);
+    QByteArray Hash(QFile& file);
 
-    uint64_t FastHash(const QString& file);
+    QByteArray FastHash(QFile& file);
 
 private:
-    FileMap Hash2FileList;
+    FileMap Size2FileList;
     std::atomic_bool* NeedStop = nullptr;
 };
 

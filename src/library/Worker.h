@@ -22,7 +22,7 @@ public:
     Worker(const QString& directory, QObject* parent, std::atomic_bool* needStop);
     ~Worker();
 
-    void setWorkingDirectory(const QString &directory);
+    void setWorkingDirectory(const QString& directory);
 
 public slots:
     void Process();
@@ -30,7 +30,7 @@ public slots:
     void Stop();
 
 signals:
-    void SetupFilesNumber(uint64_t filesNumber);
+    void SetupFilesNumber(int filesNumber);
     void Finished();
     void Aborted();
 

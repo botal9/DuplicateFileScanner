@@ -40,7 +40,7 @@ void Worker::Process() {
     Comparator = new FileComparator(fileMap, NeedStop);
 
     connect(Comparator, SIGNAL(SendDuplicates(const FileList&)), Parent, SLOT(AddDuplicatesList(const FileList&)));
-    connect(Comparator, SIGNAL(ProcessedFiles(uint64_t)), Parent, SLOT(UpdateProgressBar(uint64_t)));
+    connect(Comparator, SIGNAL(ProcessedFiles(int)), Parent, SLOT(UpdateProgressBar(int)));
     connect(Comparator, SIGNAL(Finished()), this, SLOT(Finish()));
 
     Comparator->Process();
