@@ -36,6 +36,10 @@ void Worker::Process() {
     Scanner->RecursiveScanReduceBySize(fileMap, filesNumber);
 
     emit SetupFilesNumber(filesNumber);
+    if (NeedStop->load()) {
+        emit Aborted();
+        return;
+    }
 
     Comparator = new FileComparator(fileMap, NeedStop);
 

@@ -31,9 +31,6 @@ public:
     void RecursiveScanReduceBySize(FileMap& fileMap, uint64_t& filesNumber);
 
 private:
-    void RecursiveScanReduceBySize(QDir& tmpDir, FileMap& result, uint64_t& filesNumber);
-
-private:
     QDir WorkingDirectory;
     std::atomic_bool* NeedStop = nullptr;
 };

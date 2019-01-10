@@ -104,9 +104,11 @@ TEST(correctness, empty_files)
 
     process(directoryScanner, fileComparator, checker, path);
 
-    EXPECT_TRUE(checker->Successfully());
+    std::sort(checker->Duplicates.front().begin(), checker->Duplicates.front().end());
     EXPECT_EQ(checker->Duplicates.front().front(), path + fileName1);
     EXPECT_EQ(checker->Duplicates.front().back(), path + fileName2);
+
+    EXPECT_TRUE(checker->Successfully());
     EXPECT_EQ(checker->ProcessedFilesByScanner, 2);
     EXPECT_EQ(checker->ProcessedFilesByComparator, 2);
     EXPECT_EQ(checker->Duplicates.size(), 1);

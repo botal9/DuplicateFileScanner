@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <memory>
+#include <thread>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -45,17 +46,8 @@ MainWindow::MainWindow(QWidget* parent)
 }
 
 MainWindow::~MainWindow() {
-    NeedStop.store(true);
-    for (QThread* thread : WorkingThreads) {
-        if (thread != nullptr && !thread->isFinished()) {
-            thread->quit();
-        }
-    }
-    for (QThread* thread : WorkingThreads) {
-        if (thread != nullptr && !thread->isFinished()) {
-            thread->wait();
-        }
-    }
+    Stop();
+    ResetThread();
 }
 
 void MainWindow::Stop() {
@@ -88,23 +80,22 @@ void MainWindow::SelectDirectory() {
         return;
     }
 
+    NeedStop = false;
     SetupInterface();
 
-    NeedStop = false;
-    QThread* thread = new QThread();
+    WorkingThread = new QThread();
     Worker* worker = new Worker(SelectedDirectory.absolutePath(), this, &NeedStop);
-    worker->moveToThread(thread);
+    worker->moveToThread(WorkingThread);
 
-    connect(thread, SIGNAL(started()), worker, SLOT(Process()));
-    connect(worker, SIGNAL(Finished()), thread, SLOT(quit()));
-    connect(thread, SIGNAL(finished()), worker, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT (deleteLater()));
+    connect(WorkingThread, SIGNAL(started()), worker, SLOT(Process()));
+    connect(worker, SIGNAL(Finished()), WorkingThread, SLOT(quit()));
+    connect(WorkingThread, SIGNAL(finished()), worker, SLOT(deleteLater()));
+    connect(WorkingThread, SIGNAL(finished()), WorkingThread, SLOT (deleteLater()));
     connect(worker, SIGNAL(SetupFilesNumber(int)), this, SLOT(SetupProgressBar(int)));
     connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));
     connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
 
-    WorkingThreads.push_back(thread);
-    thread->start();
+    WorkingThread->start();
 }
 
 void MainWindow::AddDuplicatesList(const FileList &duplicates) {
@@ -149,6 +140,7 @@ void MainWindow::PostProcessInterface(bool success) {
     }
     ui->statusAction->show();
     ui->treeWidget->setSortingEnabled(true);
+    ResetThread();
     qDebug("Time elapsed: %d ms", Time.elapsed());
 }
 
@@ -169,6 +161,7 @@ void MainWindow::SetupInterface() {
     ui->actionDelete->setVisible(true);
     ui->treeWidget->setVisible(true);
     ui->treeWidget->clear();
+    ui->treeWidget->setSortingEnabled(false);
 }
 
 void MainWindow::Delete() {
@@ -219,5 +212,13 @@ void MainWindow::Delete() {
     if (!skippedFiles.empty()) {
         QMessageBox::information(this, "Can't delete file(s)", operationInfo);
     }
+}
+
+void MainWindow::ResetThread() {
+    if (WorkingThread != nullptr && !WorkingThread->isFinished()) {
+        WorkingThread->quit();
+        WorkingThread->wait();
+    }
+    delete WorkingThread;
 }
 

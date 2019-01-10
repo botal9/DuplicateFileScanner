@@ -85,7 +85,7 @@ QByteArray FileComparator::Hash(QFile& file) {
     QCryptographicHash hash(QCryptographicHash::Sha256);
 
     while (!file.atEnd()) {
-        if (NeedStop) {
+        if (NeedStop->load()) {
             file.close();
             return QByteArray();
         }

@@ -40,6 +40,7 @@ private:
     void ExpandAllRows();
     void CollapseAllRows();
     void Delete();
+    void ResetThread();
 
 public slots:
     void AddDuplicatesList(const FileList &duplicates);
@@ -51,7 +52,7 @@ public slots:
 private:
     std::unique_ptr<Ui::MainWindow> ui;
     std::atomic_bool NeedStop = false;
-    QVector<QThread*> WorkingThreads;
+    QThread* WorkingThread = nullptr;
     QTime Time;
 
     QDir SelectedDirectory;
