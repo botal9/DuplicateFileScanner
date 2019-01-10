@@ -91,13 +91,13 @@ void MainWindow::SelectDirectory() {
     SetupInterface();
 
     NeedStop = false;
-    QThread* thread = new QThread;
+    QThread* thread = new QThread();
     Worker* worker = new Worker(SelectedDirectory.absolutePath(), this, &NeedStop);
     worker->moveToThread(thread);
 
     connect(thread, SIGNAL(started()), worker, SLOT(Process()));
     connect(worker, SIGNAL(Finished()), thread, SLOT(quit()));
-    connect(worker, SIGNAL(Finished()), worker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), worker, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT (deleteLater()));
     connect(worker, SIGNAL(SetupFilesNumber(int)), this, SLOT(SetupProgressBar(int)));
     connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));

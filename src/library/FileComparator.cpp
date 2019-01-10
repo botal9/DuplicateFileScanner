@@ -99,12 +99,10 @@ QByteArray FileComparator::Hash(QFile& file) {
 QByteArray FileComparator::FastHash(QFile& file) {
     DoWithRetryThrows(DefaultTimeOptions, TryOpenQFile, file);
 
-    QCryptographicHash hash(QCryptographicHash::Sha256);
-
-    hash.addData(file.read(SMALL_BUFFER_SIZE));
+    QByteArray result = file.read(SMALL_BUFFER_SIZE);
     file.close();
 
-    return hash.result();
+    return result;
 }
 
 void FileComparator::ProcessFileList(const FileList& fileList) {

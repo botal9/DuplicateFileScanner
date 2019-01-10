@@ -12,11 +12,13 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(Qt5Widgets REQUIRED)
 
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/interface)
 include_directories(${CMAKE_SOURCE_DIR}/src/library)
+
+include_directories(${CMAKE_SOURCE_DIR}/test)
+include_directories(${CMAKE_SOURCE_DIR}/test/gtest)
 
 add_subdirectory(src/library)
 add_subdirectory(src/interface)
@@ -29,3 +31,15 @@ target_link_libraries(Scanner
         ScannerUI)
 
 qt5_use_modules(Scanner Widgets)
+
+
+add_executable(Test
+        test/gtest/gtest.h
+        test/gtest/gtest-all.cc
+        test/gtest/gtest_main.cc
+        test/tests.cpp)
+
+target_link_libraries(Test -lpthread
+        ScannerLib)
+
+qt5_use_modules(Test Widgets)

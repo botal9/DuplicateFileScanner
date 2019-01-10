@@ -16,6 +16,9 @@
 class DirectoryScanner : public QObject {
     Q_OBJECT
 
+signals:
+    void Finished();
+
 public:
     DirectoryScanner() = default;
     DirectoryScanner(const QString& directory, std::atomic_bool* needStop);

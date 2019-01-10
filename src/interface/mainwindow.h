@@ -1,9 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "TreeWidgetItem.h"
+
 #include "library/Worker.h"
 #include "library/util.h"
-#include "TreeWidgetItem.h"
 
 #include <memory>
 

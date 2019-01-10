@@ -11,7 +11,6 @@
 #include <atomic>
 
 #include <QDebug>
-#include <QThreadPool>
 
 class Worker : public QObject {
     Q_OBJECT
