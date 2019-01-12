@@ -18,20 +18,18 @@ DirectoryScanner::DirectoryScanner(const QDir& dir, std::atomic_bool* needStop)
 }
 
 void DirectoryScanner::RecursiveScanReduceBySize(FileMap& fileMap, uint64_t& filesNumber) {
-    if (!WorkingDirectory.isEmpty()) {
-        QDirIterator it(WorkingDirectory, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
-        while (it.hasNext()) {
-            if (NeedStop->load()) {
-                break;
-            }
-            QFileInfo file(it.next());
-            if (!file.permission(QFile::ReadUser)) {
-                continue;
-            }
-            if (file.isFile()) {
-                ++filesNumber;
-                fileMap[file.size()].push_back(file.absoluteFilePath());
-            }
+    QDirIterator it(WorkingDirectory, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
+    while (it.hasNext()) {
+        if (NeedStop->load()) {
+            break;
+        }
+        QFileInfo file(it.next());
+        if (!file.permission(QFile::ReadUser)) {
+            continue;
+        }
+        if (file.isFile()) {
+            ++filesNumber;
+            fileMap[file.size()].push_back(file.absoluteFilePath());
         }
     }
     emit Finished();
