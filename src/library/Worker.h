@@ -17,8 +17,8 @@ class Worker : public QObject {
 
 public:
     Worker() = default;
-    Worker(QObject* parent, std::atomic_bool* needStop);
-    Worker(const QString& directory, QObject* parent, std::atomic_bool* needStop);
+    Worker(QObject* parent);
+    Worker(const QString& directory, QObject* parent);
     ~Worker();
 
     void setWorkingDirectory(const QString& directory);
@@ -36,7 +36,7 @@ signals:
 private:
     QDir WorkingDirectory;
     QObject* Parent = nullptr;
-    std::atomic_bool* NeedStop = nullptr;
+    std::atomic_bool NeedStop = false;
 
     DirectoryScanner* Scanner = nullptr;
     FileComparator* Comparator = nullptr;

@@ -25,13 +25,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         src/main.cpp \
-        src/mainwindow.cpp
+        src/interface/mainwindow.cpp \
+        src/interface/Deleter.cpp \
+        src/interface/TreeWidgetItem.cpp \
+        src/library/DirectoryScanner.cpp \
+        src/library/FileComparator.cpp \
+        src/library/retry.cpp \
+        src/library/Worker.cpp
 
 HEADERS += \
-        src/mainwindow.h
+        src/interface/mainwindow.h \
+        src/interface/Deleter.h \
+        src/interface/TreeWidgetItem.h \
+        src/library/DirectoryScanner.h \
+        src/library/FileComparator.h \
+        src/library/retry.h \
+        src/library/util.h \
+        src/library/Worker.h
 
 FORMS += \
-        src/mainwindow.ui
+        src/interface/mainwindow.ui
 
 CONFIG (debug, debug|release) {
     CONFIG += \

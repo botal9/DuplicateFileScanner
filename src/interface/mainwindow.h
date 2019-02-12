@@ -3,6 +3,7 @@
 
 #include "TreeWidgetItem.h"
 
+#include "Deleter.h"
 #include "library/Worker.h"
 #include "library/util.h"
 
@@ -40,19 +41,25 @@ private:
     void ExpandAllRows();
     void CollapseAllRows();
     void Delete();
-    void ResetThread();
+    void ResetWorkingThread();
+    void ResetDeletingThread();
 
 public slots:
-    void AddDuplicatesList(const FileList &duplicates);
+    void AddDuplicatesList(const FileList& duplicates);
     void UpdateProgressBar(int filesNumber);
     void SetupProgressBar(int filesNumber);
     void PostProcessFinish();
     void PostProcessAbort();
+    void PostProcessDelete(const FileList& deletedFiles, const FileList& skippedFiles);
+
+signals:
+    void StopAll();
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;
     std::atomic_bool NeedStop = false;
     QThread* WorkingThread = nullptr;
+    QThread* DeletingThread = nullptr;
     QTime Time;
 
     QDir SelectedDirectory;

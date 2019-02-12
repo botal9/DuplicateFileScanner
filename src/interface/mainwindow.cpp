@@ -47,11 +47,13 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow() {
     Stop();
-    ResetThread();
+    ResetWorkingThread();
+    ResetDeletingThread();
 }
 
 void MainWindow::Stop() {
-    NeedStop.store(true);
+    NeedStop = true;
+    emit StopAll();
 }
 
 void MainWindow::CollapseAllRows() {
@@ -84,21 +86,22 @@ void MainWindow::SelectDirectory() {
     SetupInterface();
 
     WorkingThread = new QThread();
-    Worker* worker = new Worker(SelectedDirectory.absolutePath(), this, &NeedStop);
+    Worker* worker = new Worker(SelectedDirectory.absolutePath(), this);
     worker->moveToThread(WorkingThread);
 
     connect(WorkingThread, SIGNAL(started()), worker, SLOT(Process()));
     connect(worker, SIGNAL(Finished()), WorkingThread, SLOT(quit()));
+    connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
     connect(WorkingThread, SIGNAL(finished()), worker, SLOT(deleteLater()));
     connect(WorkingThread, SIGNAL(finished()), WorkingThread, SLOT (deleteLater()));
     connect(worker, SIGNAL(SetupFilesNumber(int)), this, SLOT(SetupProgressBar(int)));
     connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));
-    connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
+    connect(this, SIGNAL(StopAll()), worker, SLOT(Stop()), Qt::DirectConnection);
 
     WorkingThread->start();
 }
 
-void MainWindow::AddDuplicatesList(const FileList &duplicates) {
+void MainWindow::AddDuplicatesList(const FileList& duplicates) {
     UpdateProgressBar(duplicates.size());
     QRegExp regExp(BeautySelectedDirectory);
 
@@ -140,7 +143,7 @@ void MainWindow::PostProcessInterface(bool success) {
     }
     ui->statusAction->show();
     ui->treeWidget->setSortingEnabled(true);
-    ResetThread();
+    WorkingThread = nullptr;
     qDebug("Time elapsed: %d ms", Time.elapsed());
 }
 
@@ -183,25 +186,24 @@ void MainWindow::Delete() {
         return;
     }
 
-    QMap<QString, QTreeWidgetItem*> deletedFiles;
-    QVector<QString> skippedFiles;
-    for (const auto& item : itemsToDelete) {
-        QFile file(item->text(0));
-        if (file.remove()) {
-            deletedFiles.insert(file.fileName(), item);
-        } else {
-            skippedFiles.push_back(file.fileName());
-        }
-    }
+    ui->treeWidget->setSortingEnabled(false);
 
-    for (const auto& item : deletedFiles) {
-        auto* parent = item->parent();
-        parent->removeChild(item);
-        dynamic_cast<TreeWidgetItem*>(parent)->SetNumber(0, parent->childCount());
-        if (parent->childCount() == 0) {
-            delete parent;
-        }
-    }
+    DeletingThread = new QThread();
+    Deleter* deleter = new Deleter(std::move(itemsToDelete), SelectedDirectory.absolutePath());
+    deleter->moveToThread(DeletingThread);
+
+    connect(DeletingThread, SIGNAL(started()), deleter, SLOT(DeleteItems()));
+    connect(deleter, SIGNAL(Finished()), DeletingThread, SLOT(quit()));
+    connect(deleter, SIGNAL(Finished(const FileList&, const FileList&)), this, SLOT(PostProcessDelete(const FileList&, const FileList&)));
+    connect(DeletingThread, SIGNAL(finished()), deleter, SLOT(deleteLater()));
+    connect(DeletingThread, SIGNAL(finished()), DeletingThread, SLOT (deleteLater()));
+    connect(this, SIGNAL(StopAll()), deleter, SLOT(Stop()), Qt::DirectConnection);
+
+    DeletingThread->start();
+}
+
+void MainWindow::PostProcessDelete(const FileList& deletedFiles, const FileList& skippedFiles) {
+    ui->treeWidget->setSortingEnabled(true);
 
     QString operationInfo = QString("Can't delete ").append(QString::number(skippedFiles.size())).append(" file(s):\n");
     for (const QString& fileName : skippedFiles) {
@@ -212,13 +214,20 @@ void MainWindow::Delete() {
     if (!skippedFiles.empty()) {
         QMessageBox::information(this, "Can't delete file(s)", operationInfo);
     }
+    DeletingThread = nullptr;
 }
 
-void MainWindow::ResetThread() {
+void MainWindow::ResetWorkingThread() {
     if (WorkingThread != nullptr && !WorkingThread->isFinished()) {
         WorkingThread->quit();
         WorkingThread->wait();
     }
-    delete WorkingThread;
+}
+
+void MainWindow::ResetDeletingThread() {
+    if (DeletingThread != nullptr && !DeletingThread->isFinished()) {
+        DeletingThread->quit();
+        DeletingThread->wait();
+    }
 }
 

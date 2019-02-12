@@ -15,6 +15,8 @@ add_library(ScannerUI STATIC
         mainwindow.h
         mainwindow.cpp
         TreeWidgetItem.h
-        TreeWidgetItem.cpp)
+        TreeWidgetItem.cpp
+        Deleter.h
+        Deleter.cpp)
 
 qt5_use_modules(ScannerUI Widgets)
